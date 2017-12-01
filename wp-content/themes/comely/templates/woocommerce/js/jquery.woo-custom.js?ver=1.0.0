@@ -1,0 +1,211 @@
+jQuery(document).ready( function($) {
+
+	// Orderby
+	$( '.woocommerce-ordering' ).on( 'change', 'select.orderby', function() {
+		$( this ).closest( 'form' ).submit();
+	});
+
+	// Quantity buttons
+	$( 'div.quantity:not(.buttons_added), td.quantity:not(.buttons_added)' )
+		.addClass( 'buttons_added' )
+		.append( '<input type="button" value="&#61543;" class="plus" />' )
+		.prepend( '<input type="button" value="&#61544;" class="minus" />' );
+
+	// Target quantity inputs on product pages
+	$( 'input.qty:not(.product-quantity input.qty)' ).each( function() {
+		var min = parseFloat( $( this ).attr( 'min' ) );
+
+		if ( min && min > 0 && parseFloat( $( this ).val() ) < min ) {
+			$( this ).val( min );
+		}
+	});
+
+	$( '.woocommerce-error' ).not( '.woo-message-container .woocommerce-error' ).wrap( '<div class="woo-message-container"></div>' );
+
+	$(document).on( 'click', '.plus, .minus', function() {
+
+		// Get values
+		var $qty		= $( this ).closest( '.quantity' ).find( '.qty' ),
+			currentVal	= parseFloat( $qty.val() ),
+			max			= parseFloat( $qty.attr( 'max' ) ),
+			min			= parseFloat( $qty.attr( 'min' ) ),
+			step		= $qty.attr( 'step' );
+
+		// Format values
+		if ( ! currentVal || currentVal === '' || currentVal === 'NaN' ) currentVal = 0;
+		if ( max === '' || max === 'NaN' ) max = '';
+		if ( min === '' || min === 'NaN' ) min = 0;
+		if ( step === 'any' || step === '' || step === undefined || parseFloat( step ) === 'NaN' ) step = 1;
+
+		// Change the value
+		if ( $( this ).is( '.plus' ) ) {
+
+			if ( max && ( max == currentVal || currentVal > max ) ) {
+				$qty.val( max );
+			} else {
+				$qty.val( currentVal + parseFloat( step ) );
+			}
+
+		} else {
+
+			if ( min && ( min == currentVal || currentVal < min ) ) {
+				$qty.val( min );
+			} else if ( currentVal > 0 ) {
+				$qty.val( currentVal - parseFloat( step ) );
+			}
+
+		}
+
+		// Trigger change event
+		$qty.trigger( 'change' );
+	});
+
+	$( 'a.showcoupon' ).on( 'click', function() {
+		$( '.checkout_coupon' ).slideToggle( 400, function() {
+			$( '#coupon_code' ).focus();
+		});
+
+		return false;
+	});
+
+	$( 'a[href^="#tab-reviews"]' ).on( 'click', function(event) {
+		var tabIndex = $( this ).attr( 'href' ).replace( '#tab-reviews', '' ) - 1,
+			tabsContainer = $( '.woo-section' ).width();
+		if ( tabsContainer <= 450 ) {
+			$( '.accordion' ).eq( tabIndex ).click();
+		} else {
+			$( '.woo-tabs li' ).eq( tabIndex ).click();
+		}
+		event.preventDefault();
+	});
+
+	$( 'a.woocommerce-review-link' ).bind( 'click', function(event) {
+		var $anchor = $(this);
+		$( 'html, body' ).stop().animate({
+			scrollTop : $( $anchor.attr( 'href' ) ).offset().top - 100
+		}, 1500, 'easeInOutExpo' );
+		event.preventDefault();
+	});
+
+	$( 'div.woo-section' ).each( function() {
+		$(this)
+			.find( 'li:eq(0)' )
+			.addClass( 'current' );
+		$(this)
+			.find( 'h5:eq(0)' )
+			.addClass( 'active' );
+		$(this)
+			.find( 'div.woo-box:eq(0)' )
+			.addClass( 'visible' );
+	});
+	$( '.woo-tabs' ).delegate( 'li:not(.current)', 'click', function() {
+		$( 'div.tabs-container' )
+			.find( 'h5' )
+			.removeClass( 'active' )
+			.eq( $(this).index() )
+			.addClass( 'active' );
+		$(this)
+			.addClass( 'current' )
+			.siblings()
+			.removeClass( 'current' )
+			.parents( 'div.woo-section' )
+			.find( 'div.woo-box' )
+			.eq( $(this).index() )
+			.fadeIn()
+			.addClass( 'visible' )
+			.siblings( 'div.woo-box' )
+			.removeClass( 'visible' )
+			.hide();
+	});
+	$( '.woo-section .woo-tabs li span' ).on({
+		'mouseenter' : function( event ) {
+			$(this)
+				.find( 'span' )
+				.stop( true, true )
+				.animate({
+					marginTop		: '4px',
+					marginBottom	: '-4px'
+			}, 300 )
+		},
+		'mouseleave' : function( event ) {
+			$(this)
+				.find( 'span' )
+				.stop( true, true )
+				.animate({
+					marginTop		: '0',
+					marginBottom	: '0'
+			}, 300 )
+		},
+		'click' : function() {
+			$(this)
+				.find( 'span' )
+				.stop( true, true )
+				.animate({
+					marginTop		: '0',
+					marginBottom	: '0'
+			}, 300 )
+		}
+	}, 'li:not(.current)' );
+
+	/**
+	 * If mobile convert to Accordion
+	 */
+	var tabsContainer = $( '.woo-section' ).width();
+	if ( tabsContainer >= 481 ) {
+		$( '.woo-section' ).removeClass( 'transform-to-accordion' );
+	};
+	if ( tabsContainer <= 480 ) {
+		$( '.woo-section' ).addClass( 'transform-to-accordion' );
+	};
+	$( '.transform-to-accordion' ).each( function(i) {
+		var tgl    = $(this),
+			toggle = tgl.find( '.accordion' );
+		toggle.click( function() {
+			if ( $(this).next().is( ':hidden' ) ) {
+				tgl
+					.find( '.accordion' )
+					.removeClass( 'active' )
+					.next()
+					.removeClass( 'visible' )
+					.slideUp();
+				$(this)
+					.toggleClass( 'active' )
+					.next()
+					.addClass( 'visible' )
+					.slideDown();
+			}
+			return false;
+		});
+	});
+	$( window ).on( 'resize', function() {
+		var tabsContainer = $( '.woo-section' ).width();
+		if ( tabsContainer >= 481 ) {
+			$( '.woo-section' ).removeClass( 'transform-to-accordion' );
+		};
+		if ( tabsContainer <= 480 ) {
+			$( '.woo-section' ).addClass( 'transform-to-accordion' );
+		};
+		$( '.transform-to-accordion' ).each( function(i) {
+			var tgl    = $(this),
+				toggle = tgl.find( '.accordion' );
+			toggle.click( function() {
+				if ( $(this).next().is( ':hidden' ) ) {
+					tgl
+						.find( '.accordion' )
+						.removeClass( 'active' )
+						.next()
+						.removeClass( 'visible' )
+						.slideUp();
+					$(this)
+						.toggleClass( 'active' )
+						.next()
+						.addClass( 'visible' )
+						.slideDown();
+				}
+				return false;
+			});
+		});
+	});
+
+});
+jQuery.noConflict();
